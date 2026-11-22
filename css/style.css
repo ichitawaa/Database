@@ -1,0 +1,145 @@
+/* Custom Styles & Micro-interactions */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+:root {
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0f172a;
+  color: #1e293b;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-16px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s ease-out forwards;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Active Nav State */
+.nav-tab-active-supermarket {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(16, 185, 129, 0.35);
+}
+
+.nav-tab-active-perpajakan {
+  background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+  color: white !important;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.35);
+}
+
+.subtab-active-supermarket {
+  background-color: #ecfdf5;
+  color: #047857;
+  border-bottom: 2px solid #10b981;
+  font-weight: 600;
+}
+
+.subtab-active-perpajakan {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border-bottom: 2px solid #3b82f6;
+  font-weight: 600;
+}
+
+/* Glassmorphism Cards */
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* Thermal POS Receipt Print Styles */
+.thermal-receipt {
+  font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+  background-color: #ffffff;
+  color: #111827;
+  width: 100%;
+  max-width: 380px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  border: 1px dashed #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Official Tax Receipt BPE Styles */
+.tax-bpe-receipt {
+  font-family: var(--font-sans);
+  background-color: #ffffff;
+  color: #0f172a;
+  max-width: 650px;
+  margin: 0 auto;
+  padding: 2.25rem;
+  border: 2px solid #1e3a8a;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.tax-bpe-receipt::before {
+  content: "LEMBARAN NEGARA RESMI";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: rgba(30, 58, 138, 0.04);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Print Handling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableArea, #printableArea * {
+    visibility: visible;
+  }
+  #printableArea {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+  .no-print {
+    display: none !important;
+  }
+}

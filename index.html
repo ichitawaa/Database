@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Database Supermarket & Perpajakan (CRUD Multi-System)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              emerald: '#059669',
+              blue: '#1d4ed8',
+              slate: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Font Awesome Icons CDN -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-slate-900 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <!-- ======================================================== -->
+  <!-- TOP NAVIGATION BAR / HEADER                              -->
+  <!-- ======================================================== -->
+  <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 shadow-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between py-3 gap-3">
+        
+        <!-- Brand Title & Tag -->
+        <div class="flex items-center space-x-3">
+          <div id="brandIconContainer" class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-lg transition-all duration-300">
+            <i id="brandIcon" class="fa-solid fa-cart-shopping text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-bold text-white tracking-tight">DATASYNC PRO</h1>
+              <span id="activeSystemBadge" class="text-xs px-2 py-0.5 rounded-full font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Supermarket Active
+              </span>
+            </div>
+            <p class="text-xs text-slate-400">Integrated Database CRUD & Transaction Management</p>
+          </div>
+        </div>
+
+        <!-- System Navigation Switcher (Supermarket vs Perpajakan) -->
+        <div class="flex items-center bg-slate-800 p-1.5 rounded-2xl border border-slate-700/60 shadow-inner">
+          <button id="navBtnSupermarket" onclick="app.switchSystem('supermarket')" 
+            class="flex items-center space-x-2 px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 nav-tab-active-supermarket">
+            <i class="fa-solid fa-store"></i>
+            <span>Sistem Supermarket</span>
+          </button>
+          
+          <button id="navBtnPerpajakan" onclick="app.switchSystem('perpajakan')" 
+            class="flex items-center space-x-2 px-5 py-2 rounded-xl text-sm font-semibold text-slate-300 hover:text-white transition-all duration-200">
+            <i class="fa-solid fa-building-columns"></i>
+            <span>Sistem Perpajakan</span>
+          </button>
+        </div>
+
+        <!-- Global Action Tools -->
+        <div class="flex items-center space-x-2">
+          <button onclick="app.showExportModal()" title="Export SQL untuk phpMyAdmin / MySQL"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-file-code text-amber-400"></i>
+            <span class="hidden sm:inline">Export SQL</span>
+          </button>
+          <button onclick="app.resetDataConfirm()" title="Reset data ke default"
+            class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-rose-900/50 text-slate-200 hover:text-rose-200 border border-slate-700 transition flex items-center space-x-1.5 shadow-sm">
+            <i class="fa-solid fa-rotate-left text-rose-400"></i>
+            <span class="hidden sm:inline">Reset Data</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- MAIN CONTENT CONTAINER                                  -->
+  <!-- ======================================================== -->
+  <main class="flex-1 bg-slate-100 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+
+      <!-- ==================================================== -->
+      <!-- SECTION 1: SISTEM SUPERMARKET                       -->
+      <!-- ==================================================== -->
+      <section id="sectionSupermarket" class="space-y-6">
+        
+        <!-- System Banner & Stat Cards -->
+        <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-emerald-800/40 relative overflow-hidden">
+          <div class="absolute -right-8 -bottom-8 text-emerald-800/20 text-9xl pointer-events-none select-none">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-medium border border-emerald-500/30 mb-2">
+                <i class="fa-solid fa-circle-check text-emerald-400"></i> Basis Data: supermarket.sql
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Sistem Manajemen Supermarket</h2>
+              <p class="text-slate-300 text-sm mt-1 max-w-xl">
+                Kelola master data produk, data kasir shift & karyawan, data pelanggan/membership, serta lakukan pencatatan transaksi kasir POS secara terintegrasi.
+              </p>
+            </div>
+            
+            <!-- Quick Stat Counters -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-emerald-200">Total Produk</p>
+                <p id="statSupermarketProduk" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-emerald-200">Kasir Aktif</p>
+                <p id="statSupermarketKasir" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-emerald-200">Pelanggan Member</p>
+                <p id="statSupermarketPelanggan" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-emerald-200">Total Transaksi</p>
+                <p id="statSupermarketTransaksi" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Navigation Tabs for Supermarket -->
+        <div class="bg-white rounded-2xl p-2 shadow-sm border border-slate-200 flex flex-wrap gap-2">
+          <button onclick="app.setSupermarketTab('produk')" id="smTabProduk"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition subtab-active-supermarket">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            <span>Master Produk</span>
+          </button>
+          <button onclick="app.setSupermarketTab('kasir')" id="smTabKasir"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-cash-register"></i>
+            <span>Data Kasir</span>
+          </button>
+          <button onclick="app.setSupermarketTab('pelanggan')" id="smTabPelanggan"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-users"></i>
+            <span>Data Pelanggan</span>
+          </button>
+          <button onclick="app.setSupermarketTab('pos')" id="smTabPos"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span>Transaksi Penjualan (POS)</span>
+          </button>
+          <button onclick="app.setSupermarketTab('riwayat')" id="smTabRiwayat"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-emerald-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-receipt"></i>
+            <span>Riwayat Transaksi</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT: PRODUK -->
+        <div id="smContentProduk" class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-1 flex-col sm:flex-row gap-3">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                <input type="text" id="smProdukSearch" oninput="app.renderProdukTable()" placeholder="Cari nama produk, kode PRD, atau kategori..."
+                  class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              </div>
+              <select id="smProdukCategoryFilter" onchange="app.renderProdukTable()"
+                class="px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 bg-white">
+                <option value="">Semua Kategori</option>
+              </select>
+            </div>
+            <button onclick="app.openProdukModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Produk Baru</span>
+            </button>
+          </div>
+
+          <!-- Tabel Produk -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">Kode Produk</th>
+                    <th class="py-3.5 px-4">Nama Produk</th>
+                    <th class="py-3.5 px-4">Kategori</th>
+                    <th class="py-3.5 px-4 text-right">Harga Jual</th>
+                    <th class="py-3.5 px-4 text-center">Stok</th>
+                    <th class="py-3.5 px-4 text-center">Status</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="smProdukTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: KASIR -->
+        <div id="smContentKasir" class="space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+              <input type="text" id="smKasirSearch" oninput="app.renderKasirTable()" placeholder="Cari ID kasir, nama kasir, atau shift..."
+                class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+            <button onclick="app.openKasirModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Kasir Baru</span>
+            </button>
+          </div>
+
+          <!-- Tabel Kasir -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">ID Kasir</th>
+                    <th class="py-3.5 px-4">Nama Kasir / Karyawan</th>
+                    <th class="py-3.5 px-4">Shift Tugas</th>
+                    <th class="py-3.5 px-4">No. Telepon</th>
+                    <th class="py-3.5 px-4">Alamat</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="smKasirTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: PELANGGAN -->
+        <div id="smContentPelanggan" class="space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+              <input type="text" id="smPelangganSearch" oninput="app.renderPelangganTable()" placeholder="Cari ID pelanggan, nama, atau no. telepon..."
+                class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+            <button onclick="app.openPelangganModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Tambah Pelanggan Baru</span>
+            </button>
+          </div>
+
+          <!-- Tabel Pelanggan -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">ID Pelanggan</th>
+                    <th class="py-3.5 px-4">Nama Pelanggan</th>
+                    <th class="py-3.5 px-4">No. Telepon</th>
+                    <th class="py-3.5 px-4 text-center">Poin Member</th>
+                    <th class="py-3.5 px-4 text-center">Tingkat Member</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="smPelangganTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: TRANSAKSI PENJUALAN (POS) -->
+        <div id="smContentPos" class="space-y-6 hidden">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- Sisi Kiri: Form Pemilihan Kasir, Pelanggan, & Tambah Produk (5 Cols) -->
+            <div class="lg:col-span-5 space-y-4">
+              
+              <!-- Info Kasir & Pelanggan -->
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <i class="fa-solid fa-user-tag text-emerald-600"></i>
+                  <span>1. Identitas Transaksi</span>
+                </h3>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Kasir Bertugas <span class="text-rose-500">*</span></label>
+                  <select id="posKasirSelect" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Pelanggan (Member) / Umum</label>
+                  <select id="posPelangganSelect" onchange="app.onPosPelangganChange()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                    <!-- Populated dynamically -->
+                  </select>
+                  <p id="posPelangganInfo" class="text-xs text-slate-500 mt-1 italic">Pelanggan Umum (Tanpa akumulasi poin)</p>
+                </div>
+              </div>
+
+              <!-- Pemilihan Produk -->
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-3">
+                  <i class="fa-solid fa-barcode text-emerald-600"></i>
+                  <span>2. Tambah Produk ke Keranjang</span>
+                </h3>
+
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">Pilih Produk</label>
+                  <select id="posProdukSelect" onchange="app.onPosProdukSelectChange()" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Harga Satuan</label>
+                    <input type="text" id="posHargaPreview" readonly value="Rp 0" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-600 font-semibold cursor-not-allowed">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Stok Tersedia</label>
+                    <input type="text" id="posStokPreview" readonly value="0 item" class="w-full px-3 py-2 text-sm rounded-xl bg-slate-50 border border-slate-200 text-slate-600 font-semibold cursor-not-allowed">
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-3 pt-1">
+                  <div class="w-1/3">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Jumlah (Qty)</label>
+                    <input type="number" id="posInputQty" value="1" min="1" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold text-center">
+                  </div>
+                  <div class="w-2/3 flex items-end">
+                    <button type="button" onclick="app.addItemToCart()" class="w-full py-2.5 px-4 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-emerald-600/20">
+                      <i class="fa-solid fa-cart-plus"></i>
+                      <span>Masukan Item</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Sisi Kanan: Keranjang Belanja & Checkout (7 Cols) -->
+            <div class="lg:col-span-7 space-y-4">
+              <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-basket-shopping text-emerald-600"></i>
+                    <span>Keranjang Belanja</span>
+                    <span id="posCartItemCount" class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 font-bold">0 Item</span>
+                  </h3>
+                  <button type="button" onclick="app.clearCart()" class="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-trash-can"></i> Kosongkan
+                  </button>
+                </div>
+
+                <!-- Tabel Item Keranjang -->
+                <div class="border border-slate-100 rounded-xl overflow-hidden">
+                  <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                      <thead class="bg-slate-50 text-slate-500 sticky top-0">
+                        <tr>
+                          <th class="py-2.5 px-3">Produk</th>
+                          <th class="py-2.5 px-3 text-right">Harga</th>
+                          <th class="py-2.5 px-3 text-center">Qty</th>
+                          <th class="py-2.5 px-3 text-right">Subtotal</th>
+                          <th class="py-2.5 px-3 text-center">Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="posCartTableBody" class="divide-y divide-slate-100">
+                        <!-- Rendered dynamically -->
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <!-- Ringkasan Perhitungan -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2">
+                  <div class="flex justify-between text-sm text-slate-600">
+                    <span>Total Item:</span>
+                    <span id="posSummaryTotalItems" class="font-bold">0 pcs</span>
+                  </div>
+                  <div class="flex justify-between text-base font-extrabold text-slate-800 pt-2 border-t border-slate-200">
+                    <span>Total Tagihan:</span>
+                    <span id="posSummaryGrandTotal" class="text-emerald-600 text-xl font-black">Rp 0</span>
+                  </div>
+                </div>
+
+                <!-- Bagian Pembayaran -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Metode Pembayaran</label>
+                    <select id="posPaymentMethod" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white">
+                      <option value="Tunai">Tunai (Cash)</option>
+                      <option value="QRIS">QRIS / E-Wallet</option>
+                      <option value="Debit Mandiri/BCA">Kartu Debit</option>
+                      <option value="Transfer Bank">Transfer Bank</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">Nominal Uang Diterima (Rp)</label>
+                    <input type="number" id="posCashGiven" oninput="app.calculateChange()" placeholder="Contoh: 100000"
+                      class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-bold">
+                  </div>
+                </div>
+
+                <!-- Kembalian Display -->
+                <div id="posChangeContainer" class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-emerald-800">
+                  <span class="text-xs font-semibold">Kembalian:</span>
+                  <span id="posChangeAmount" class="text-lg font-black text-emerald-700">Rp 0</span>
+                </div>
+
+                <!-- Tombol Eksekusi Transaksi -->
+                <button type="button" onclick="app.processCheckout()" class="w-full py-3.5 px-4 rounded-xl text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center justify-center space-x-2 shadow-lg shadow-emerald-600/30">
+                  <i class="fa-solid fa-cash-register text-lg"></i>
+                  <span>Simpan Transaksi & Cetak Struk</span>
+                </button>
+
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: RIWAYAT TRANSAKSI -->
+        <div id="smContentRiwayat" class="space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+              <input type="text" id="smRiwayatSearch" oninput="app.renderRiwayatTable()" placeholder="Cari ID transaksi, nama kasir, nama pelanggan, metode..."
+                class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+            </div>
+          </div>
+
+          <!-- Tabel Riwayat -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">No. Transaksi</th>
+                    <th class="py-3.5 px-4">Waktu Transaksi</th>
+                    <th class="py-3.5 px-4">Kasir</th>
+                    <th class="py-3.5 px-4">Pelanggan</th>
+                    <th class="py-3.5 px-4">Metode</th>
+                    <th class="py-3.5 px-4 text-right">Total Bayar</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="smRiwayatTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+
+      <!-- ==================================================== -->
+      <!-- SECTION 2: SISTEM PERPAJAKAN                        -->
+      <!-- ==================================================== -->
+      <section id="sectionPerpajakan" class="space-y-6 hidden">
+        
+        <!-- System Banner & Stat Cards -->
+        <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 text-white shadow-xl border border-blue-800/40 relative overflow-hidden">
+          <div class="absolute -right-8 -bottom-8 text-blue-800/20 text-9xl pointer-events-none select-none">
+            <i class="fa-solid fa-landmark"></i>
+          </div>
+          <div class="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div>
+              <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-medium border border-blue-500/30 mb-2">
+                <i class="fa-solid fa-circle-check text-blue-400"></i> Basis Data: perpajakan.sql
+              </div>
+              <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Sistem Administrasi & Pembayaran Perpajakan</h2>
+              <p class="text-slate-300 text-sm mt-1 max-w-xl">
+                Kelola master kategori & jenis pajak (PPh, PBB, Pajak Karbon, dll.), data Wajib Pajak (Perusahaan, Perorangan, Petugas Pajak), serta validasi setoran pajak resmi.
+              </p>
+            </div>
+            
+            <!-- Quick Stat Counters -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-blue-200">Kategori Pajak</p>
+                <p id="statTaxKategori" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-blue-200">Jenis Pajak</p>
+                <p id="statTaxJenis" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-blue-200">Wajib Pajak (WP)</p>
+                <p id="statTaxPengguna" class="text-xl font-bold mt-0.5">0</p>
+              </div>
+              <div class="bg-white/10 backdrop-blur-md rounded-2xl p-3 border border-white/10 text-center">
+                <p class="text-xs text-blue-200">Total Setoran Pajak</p>
+                <p id="statTaxTotalBayar" class="text-base sm:text-lg font-bold mt-0.5 truncate text-amber-300">Rp 0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sub-Navigation Tabs for Perpajakan -->
+        <div class="bg-white rounded-2xl p-2 shadow-sm border border-slate-200 flex flex-wrap gap-2">
+          <button onclick="app.setPerpajakanTab('kategori')" id="taxTabKategori"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition subtab-active-perpajakan">
+            <i class="fa-solid fa-folder-tree"></i>
+            <span>Kategori Pajak</span>
+          </button>
+          <button onclick="app.setPerpajakanTab('jenis')" id="taxTabJenis"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-blue-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-scale-balanced"></i>
+            <span>Jenis Pajak & Tarif</span>
+          </button>
+          <button onclick="app.setPerpajakanTab('pengguna')" id="taxTabPengguna"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-blue-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-address-card"></i>
+            <span>Wajib Pajak & Petugas (NPWP)</span>
+          </button>
+          <button onclick="app.setPerpajakanTab('pembayaran')" id="taxTabPembayaran"
+            class="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:text-blue-700 hover:bg-slate-50 transition">
+            <i class="fa-solid fa-money-check-dollar"></i>
+            <span>Pembayaran Pajak</span>
+          </button>
+        </div>
+
+        <!-- TAB CONTENT: KATEGORI PAJAK -->
+        <div id="taxContentKategori" class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="relative flex-1">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+              <input type="text" id="taxKategoriSearch" oninput="app.renderTaxKategoriTable()" placeholder="Cari kode kategori, nama kategori, atau keterangan..."
+                class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            </div>
+            <button onclick="app.openTaxKategoriModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Kategori Baru</span>
+            </button>
+          </div>
+
+          <!-- Tabel Kategori Pajak -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">ID Kategori</th>
+                    <th class="py-3.5 px-4">Nama Kategori</th>
+                    <th class="py-3.5 px-4">Keterangan Regulasi</th>
+                    <th class="py-3.5 px-4 text-center">Jumlah Jenis Pajak</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="taxKategoriTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: JENIS PAJAK -->
+        <div id="taxContentJenis" class="space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-1 flex-col sm:flex-row gap-3">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                <input type="text" id="taxJenisSearch" oninput="app.renderTaxJenisTable()" placeholder="Cari ID pajak, nama pajak, tarif, atau kategori..."
+                  class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+              </div>
+              <select id="taxJenisCategoryFilter" onchange="app.renderTaxJenisTable()"
+                class="px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 bg-white">
+                <option value="">Semua Kategori</option>
+              </select>
+            </div>
+            <button onclick="app.openTaxJenisModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-plus"></i>
+              <span>Tambah Jenis Pajak Baru</span>
+            </button>
+          </div>
+
+          <!-- Tabel Jenis Pajak -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">ID Pajak</th>
+                    <th class="py-3.5 px-4">Nama Jenis Pajak</th>
+                    <th class="py-3.5 px-4">Kategori Pajak</th>
+                    <th class="py-3.5 px-4">Tarif Pajak Resmi</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="taxJenisTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: PENGGUNA / WAJIB PAJAK -->
+        <div id="taxContentPengguna" class="space-y-4 hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-1 flex-col sm:flex-row gap-3">
+              <div class="relative flex-1">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                <input type="text" id="taxPenggunaSearch" oninput="app.renderTaxPenggunaTable()" placeholder="Cari nama pengguna, NPWP, tipe, alamat..."
+                  class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+              </div>
+              <select id="taxPenggunaTypeFilter" onchange="app.renderTaxPenggunaTable()"
+                class="px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 bg-white">
+                <option value="">Semua Tipe Pengguna</option>
+                <option value="Perusahaan">Perusahaan (Badan Usaha)</option>
+                <option value="Perorangan">Perorangan (Orang Pribadi)</option>
+                <option value="Petugas Pajak">Petugas Pajak (Fiskus/Verifikator)</option>
+              </select>
+            </div>
+            <button onclick="app.openTaxPenggunaModal()"
+              class="px-4 py-2 rounded-xl text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-blue-600/20">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>Tambah Wajib Pajak / Petugas</span>
+            </button>
+          </div>
+
+          <!-- Tabel Pengguna / Wajib Pajak -->
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <th class="py-3.5 px-4">ID User</th>
+                    <th class="py-3.5 px-4">Nama Pengguna</th>
+                    <th class="py-3.5 px-4">Tipe Akun</th>
+                    <th class="py-3.5 px-4">Nomor Pokok Wajib Pajak (NPWP)</th>
+                    <th class="py-3.5 px-4">Kontak Telepon</th>
+                    <th class="py-3.5 px-4">Alamat Domisili</th>
+                    <th class="py-3.5 px-4 text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="taxPenggunaTableBody" class="divide-y divide-slate-100 text-sm">
+                  <!-- Rendered dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT: PEMBAYARAN PAJAK -->
+        <div id="taxContentPembayaran" class="space-y-6 hidden">
+          
+          <!-- Form Buat Pembayaran Pajak Baru -->
+          <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <i class="fa-solid fa-file-invoice-dollar text-blue-600"></i>
+                  <span>Input Setoran / Pembayaran Pajak Baru</span>
+                </h3>
+                <p class="text-xs text-slate-500">Hubungkan data Wajib Pajak, Jenis Pajak, Petugas Verifikator, dan Nominal Setoran Pajak</p>
+              </div>
+            </div>
+
+            <form id="taxPaymentForm" onsubmit="app.handleNewTaxPayment(event)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <!-- Pilih Wajib Pajak -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Wajib Pajak (WP) <span class="text-rose-500">*</span></label>
+                <select id="payWajibPajakSelect" onchange="app.onTaxWpChange()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                  <!-- Populated dynamically -->
+                </select>
+                <p id="payWpNpwpInfo" class="text-xs text-slate-500 mt-1 truncate">NPWP: -</p>
+              </div>
+
+              <!-- Pilih Jenis Pajak -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Pajak <span class="text-rose-500">*</span></label>
+                <select id="payJenisPajakSelect" onchange="app.onTaxJenisChange()" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                  <!-- Populated dynamically -->
+                </select>
+                <p id="payTarifInfo" class="text-xs text-blue-600 font-medium mt-1 truncate">Tarif: -</p>
+              </div>
+
+              <!-- Pilih Petugas Verifikator -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Petugas Verifikator / Fiskus <span class="text-rose-500">*</span></label>
+                <select id="payPetugasSelect" required class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                  <!-- Populated dynamically -->
+                </select>
+                <p class="text-xs text-slate-400 mt-1">Petugas DJP terdaftar</p>
+              </div>
+
+              <!-- Jumlah Bayar & Status -->
+              <div class="grid grid-cols-1 gap-2">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Jumlah Bayar Pajak (Rp) <span class="text-rose-500">*</span></label>
+                  <input type="number" id="payJumlahBayar" required min="1000" placeholder="Contoh: 2500000"
+                    class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-bold text-slate-800">
+                </div>
+              </div>
+
+              <!-- Baris Bawah: Status Pembayaran & Tombol Simpan -->
+              <div class="lg:col-span-3 flex flex-col sm:flex-row items-center gap-3">
+                <div class="w-full sm:w-1/2">
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Status Pembayaran</label>
+                  <select id="payStatusSelect" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white font-semibold">
+                    <option value="Lunas" class="text-emerald-700">Lunas (Tervalidasi)</option>
+                    <option value="Menunggu Verifikasi" class="text-amber-700">Menunggu Verifikasi</option>
+                    <option value="Tertunda" class="text-slate-700">Tertunda (Pending)</option>
+                  </select>
+                </div>
+                <div class="w-full sm:w-1/2">
+                  <label class="block text-xs font-semibold text-slate-700 mb-1">Tanggal & Waktu Setor</label>
+                  <input type="datetime-local" id="payTanggalBayar" class="w-full px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
+                </div>
+              </div>
+
+              <div class="lg:col-span-1 flex items-end">
+                <button type="submit" class="w-full py-2.5 px-4 rounded-xl text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center justify-center space-x-2 shadow-md shadow-blue-600/20">
+                  <i class="fa-solid fa-paper-plane"></i>
+                  <span>Simpan Pembayaran</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Tabel Riwayat Pembayaran Pajak -->
+          <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div class="flex flex-1 flex-col sm:flex-row gap-3">
+                <div class="relative flex-1">
+                  <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-400"></i>
+                  <input type="text" id="taxBayarSearch" oninput="app.renderTaxPembayaranTable()" placeholder="Cari ID bayar, nama WP, NPWP, jenis pajak, atau petugas..."
+                    class="w-full pl-10 pr-4 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+                </div>
+                <select id="taxBayarStatusFilter" onchange="app.renderTaxPembayaranTable()"
+                  class="px-3 py-2 text-sm rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 bg-white">
+                  <option value="">Semua Status</option>
+                  <option value="Lunas">Lunas</option>
+                  <option value="Menunggu Verifikasi">Menunggu Verifikasi</option>
+                  <option value="Tertunda">Tertunda</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                  <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      <th class="py-3.5 px-4">ID Pembayaran</th>
+                      <th class="py-3.5 px-4">Tanggal Setor</th>
+                      <th class="py-3.5 px-4">Wajib Pajak & NPWP</th>
+                      <th class="py-3.5 px-4">Jenis Pajak</th>
+                      <th class="py-3.5 px-4">Petugas Verifikator</th>
+                      <th class="py-3.5 px-4 text-right">Jumlah Bayar</th>
+                      <th class="py-3.5 px-4 text-center">Status</th>
+                      <th class="py-3.5 px-4 text-center">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="taxBayarTableBody" class="divide-y divide-slate-100 text-sm">
+                    <!-- Rendered dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- FOOTER                                                   -->
+  <!-- ======================================================== -->
+  <footer class="bg-slate-900 border-t border-slate-800 py-6 text-slate-400 text-xs text-center">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <i class="fa-solid fa-database text-emerald-400"></i>
+        <span>Sistem Database Relasional Multi-Entitas: Supermarket & Perpajakan</span>
+      </div>
+      <p>Mendukung format SQL Dump MySQL/MariaDB & LocalStorage Browser</p>
+    </div>
+  </footer>
+
+
+  <!-- ======================================================== -->
+  <!-- DYNAMIC CRUD MODAL CONTAINER                             -->
+  <!-- ======================================================== -->
+  <div id="crudModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden animate-fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden border border-slate-200 animate-slide-down">
+      
+      <!-- Modal Header -->
+      <div id="crudModalHeader" class="px-6 py-4 bg-emerald-600 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i id="crudModalIcon" class="fa-solid fa-pen-to-square text-lg"></i>
+          <h3 id="crudModalTitle" class="text-base font-bold">Form Data</h3>
+        </div>
+        <button onclick="app.closeCrudModal()" class="text-white/80 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body (Dynamic Form) -->
+      <form id="crudForm" onsubmit="app.handleCrudSubmit(event)" class="p-6 space-y-4">
+        <div id="crudFormFields" class="space-y-4">
+          <!-- Fields injected dynamically -->
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+          <button type="button" onclick="app.closeCrudModal()" class="px-4 py-2 rounded-xl text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">
+            Batal
+          </button>
+          <button type="submit" id="crudSubmitBtn" class="px-5 py-2 rounded-xl text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-md shadow-emerald-600/20">
+            Simpan Data
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL: STRUK KASIR SUPERMARKET (POS RECEIPT)             -->
+  <!-- ======================================================== -->
+  <div id="receiptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden animate-fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-slate-200 animate-slide-down">
+      <div class="px-5 py-3.5 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-receipt text-emerald-400"></i>
+          <h3 class="text-sm font-bold">Struk Belanja Kasir</h3>
+        </div>
+        <button onclick="app.closeReceiptModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-4 max-h-[80vh] overflow-y-auto">
+        <div id="printableArea">
+          <!-- Struk Thermal Layout -->
+          <div id="receiptContent" class="thermal-receipt text-xs">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between no-print">
+        <button onclick="app.closeReceiptModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">
+          Tutup
+        </button>
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition flex items-center space-x-1.5 shadow-md shadow-emerald-600/20">
+          <i class="fa-solid fa-print"></i>
+          <span>Cetak Struk</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL: BUKTI PEMBAYARAN PAJAK RESMI (BPE / KUITANSI)     -->
+  <!-- ======================================================== -->
+  <div id="taxReceiptModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden animate-fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-slide-down">
+      <div class="px-5 py-3.5 bg-blue-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-certificate text-amber-400"></i>
+          <h3 class="text-sm font-bold">Bukti Penerimaan Elektronik (BPE) DJP</h3>
+        </div>
+        <button onclick="app.closeTaxReceiptModal()" class="text-blue-200 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 max-h-[80vh] overflow-y-auto">
+        <div id="printableTaxArea">
+          <div id="taxReceiptContent" class="tax-bpe-receipt">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <div class="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between no-print">
+        <button onclick="app.closeTaxReceiptModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-200 transition">
+          Tutup
+        </button>
+        <button onclick="window.print()" class="px-4 py-2 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white transition flex items-center space-x-1.5 shadow-md shadow-blue-600/20">
+          <i class="fa-solid fa-print"></i>
+          <span>Cetak Bukti Pajak</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- MODAL: EXPORT SQL                                        -->
+  <!-- ======================================================== -->
+  <div id="exportModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm hidden animate-fade-in">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-200 animate-slide-down">
+      <div class="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-file-code text-amber-400"></i>
+          <h3 class="text-base font-bold">Export SQL Dump (MySQL / MariaDB)</h3>
+        </div>
+        <button onclick="app.closeExportModal()" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <p class="text-xs text-slate-500">
+          Skrip SQL ini siap dieksekusi di phpMyAdmin atau MySQL Console untuk memasukkan data yang telah dimodifikasi melalui aplikasi web.
+        </p>
+
+        <div class="flex space-x-2">
+          <button id="exportTabSm" onclick="app.switchExportTab('supermarket')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-100 text-emerald-800">
+            supermarket.sql
+          </button>
+          <button id="exportTabTax" onclick="app.switchExportTab('perpajakan')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-blue-100">
+            perpajakan.sql
+          </button>
+        </div>
+
+        <div class="relative">
+          <textarea id="exportSqlTextarea" readonly rows="12" class="w-full p-3 font-mono text-xs bg-slate-900 text-emerald-400 rounded-xl border border-slate-800 focus:outline-none"></textarea>
+          <button onclick="app.copyExportSQL()" class="absolute right-3 top-3 px-3 py-1 rounded bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold flex items-center space-x-1">
+            <i class="fa-solid fa-copy"></i>
+            <span>Salin</span>
+          </button>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+          <button onclick="app.downloadSQLFile()" class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white transition flex items-center space-x-1.5">
+            <i class="fa-solid fa-download"></i>
+            <span>Download File .SQL</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ======================================================== -->
+  <!-- FLOATING TOAST CONTAINER                                 -->
+  <!-- ======================================================== -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- JavaScript Modules -->
+  <script src="js/data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
